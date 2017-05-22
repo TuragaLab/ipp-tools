@@ -1,5 +1,5 @@
 """ This module contains methods providing a high-level map interface to an ipp cluster
-np"""
+"""
 
 import six
 import socket
