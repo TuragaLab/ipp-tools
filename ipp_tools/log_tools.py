@@ -18,7 +18,7 @@ def setup_logging(log_name, log_path):
         os.makedirs(log_path, exist_ok=True)
 
     # define file handler for module
-    fh = logging.FileHandler(log_path)
+    fh = logging.FileHandler('{}/{}'.format(log_path, log_name))
     fh.setLevel(logging.DEBUG)
 
     # create formatter and add to handler
