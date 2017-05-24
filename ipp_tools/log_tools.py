@@ -14,7 +14,7 @@ def setup_logging(log_name, log_path):
 
     log_path = os.path.expanduser(log_path)
 
-    if not os.exists(log_path):
+    if not os.path.exists(log_path):
         os.makedirs(log_path, exist_ok=True)
 
     # define file handler for module
