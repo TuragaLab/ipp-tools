@@ -31,6 +31,7 @@ def find_free_profile(profile):
     Returns:
       full_profile: the full name of a free profile
     """
+    # DEPRECATED: ipyparallel supports a cluster id argument
     if profile_installed(profile):
         print("Found existing profiles for {}. Checking for active clusters".format(profile))
         # check if any are free. if not make a new one
@@ -81,7 +82,8 @@ def profile_installed(profile):
       installed: True if a profile exists
 
     """
-    return num_profile_versions(profile) >= 1
+    profile_path = os.path.expanduser('~/.ipython/{}'.format(profile))
+    return os.path.exists(profile_path)
 
 def num_profile_versions(profile):
     """ Returns the number of versions of a profile that exist
@@ -98,7 +100,7 @@ def num_profile_versions(profile):
     return len(matching_profiles)
 
 
-def install_profile(template_profile, version_num=0):
+def install_profile(template_profile):
     """ Copy a templated profile into ~/.ipython/
 
     Returns:
@@ -106,7 +108,7 @@ def install_profile(template_profile, version_num=0):
     """
     # copy files from ipp-tools/profile/{template} to ~/.ipython
     template_path = '{}/{}'.format(package_path(), template_profile)
-    dst_path = os.path.expanduser('~/.ipython/{}_{}').format(template_profile, version_num)
+    dst_path = os.path.expanduser('~/.ipython/{}').format(template_profile)
     assert os.path.exists(template_path)
 
     shutil.copytree(template_path, dst_path)
