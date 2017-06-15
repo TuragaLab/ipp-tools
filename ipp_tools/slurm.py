@@ -124,7 +124,7 @@ def slurm_map(fnc, iterables, resource_spec,
     start_time = time.time()
     lb_view = client.load_balanced_view()
     result = lb_view.map(fnc, iterables)
-    print("Tasks finished after {} seconds".format(time() - start_time))
+    print("Tasks finished after {} seconds".format(time.time() - start_time))
 
     print("Shutting down cluster")
     client.shutdown(hub=True)
