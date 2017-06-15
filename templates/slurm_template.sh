@@ -1,5 +1,4 @@
 #!/bin/bash
-#
 #SBATCH --job-name={job_name}
 #SBATCH --output={output_path}
 #SBATCH --ntasks={n_tasks}
