@@ -104,17 +104,20 @@ def slurm_map(fnc, iterables, resource_spec,
     time.sleep(patience)
 
     # TODO: shut down unused engines
+    connected = False
     for attempt_idx in range(n_retries):
         print("Attempt {} to connect to cluster".format(attempt_idx))
         try:
             client = Client(profile=PROFILE_NAME, cluster_id=cluster_id)
             if resource_spec['min_workers'] <= len(client.ids) <= resource_spec['max_workers']:
+                connected = True
                 print('Succesfully connected to cluster with {} engines out of {} requested'.format(
                     len(client.ids), resource_spec['max_workers']))
 
                 if len(client.ids) < resource_spec['max_workers']:
                     warn("{} slurm jobs submitted but only {} are being used.".format(
                         resource_spec['max_workers'], len(client.ids)))
+
                 break
             else:
                 print("{} available engines less than minimum requested of {}".format(
@@ -124,8 +127,15 @@ def slurm_map(fnc, iterables, resource_spec,
                 time.sleep(patience)
         except OSError as os_err:
             print("Caught OSError while attempting to connect to {}: {}.".format(PROFILE_NAME, os_err))
+            print("Retrying after {}".format(patience))
+            time.sleep(patience)
         except TimeoutError as timeout_err:
             print("Caught TimeoutError while attempting to connect to {}: {}".format(PROFILE_NAME, timeout_err))
+            print("Retrying after {}".format(patience))
+            time.sleep(patience)
+
+    if not connected:
+        raise TimeoutError("Failed to connect to client after {} retries".format(n_retries))
 
     # run tasks
     print("Submitting tasks")
@@ -148,6 +158,8 @@ def slurm_map(fnc, iterables, resource_spec,
 def process_resource_spec(resource_spec):
     """ Process resource spec, filling in missing fields with default values
     """
+    # TODO:fancier logic on max/min. if
+
     default_spec = {
         'max_workers': 1,
         'min_workers': 1,
