@@ -9,4 +9,4 @@
 #SBATCH --comment="{comment}"
 
 source activate {dev_env}
-srun ipengine --profile={profile} --location={controller_hostname} --cluster-id={cluster_id}&
+srun ipengine --profile={profile} --location={controller_hostname} --cluster-id={cluster_id} &
