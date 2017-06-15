@@ -96,7 +96,7 @@ def slurm_map(fnc, iterables, resource_spec,
     )
 
     sbatch_file_path = '/tmp/slurm_map_sbatch_{}.sh'.format(cluster_id)
-    with open(sbatch_file_path, 'r') as sbatch_file:
+    with open(sbatch_file_path, 'w') as sbatch_file:
         sbatch_file.write(engine_command)
 
     # wrap command to execute in bash
