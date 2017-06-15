@@ -100,7 +100,7 @@ def slurm_map(fnc, iterables, resource_spec,
         sbatch_file.write(engine_command)
 
     # wrap command to execute in bash
-    sbatch_command = "exec bash -c 'sbatch {}".format(sbatch_file_path)
+    sbatch_command = "exec bash -c 'sbatch {}'".format(sbatch_file_path)
 
     print("Starting engines")
     # runs in the background if executed this way
