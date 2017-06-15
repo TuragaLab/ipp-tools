@@ -13,19 +13,6 @@ from ipp_tools.utils import profile_installed, install_profile, package_path
 
 
 PROFILE_NAME = 'profile_slurm'
-# need a package path util
-
-# need to check if the profile is installed
-
-# check if cluster is already running with the desired profile
-# if not duplicate it
-# so profile = profile_slurm_{id}
-
-# start controller locally
-# submit ipengine to cluster
-# wait for engines
-# once engines are ready submit jobs to load balancer
-# once jobs are finished take down cluster
 
 def slurm_map(fnc, iterables, resource_spec,
               env='root', job_name=None, output_path=None,
@@ -58,7 +45,7 @@ def slurm_map(fnc, iterables, resource_spec,
     controller_cmd_template = ('source activate {env};'
                                ' ipcontroller --profile={profile} --sqlitedb --location={hostname} --ip="*" --cluster-id={cluster_id}')
     controller_cmd = controller_cmd_template.format(
-        env=env, profile=PROFILE_NAME, location=socket.gethostname(), cluster_id=cluster_id
+        env=env, profile=PROFILE_NAME, hostname=socket.gethostname(), cluster_id=cluster_id
     )
 
     print("Starting controller with: {} \n".format(controller_cmd))
