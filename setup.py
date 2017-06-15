@@ -9,4 +9,5 @@ setup(name='ipp-tools',
       author='Andrew Berger',
       author_email='bergera@janelia.hhmi.org',
       url='https://github.com/TuragaLab/ipp-tools',
-      py_modules=['ipp_tools'])
+      py_modules=['ipp_tools'],
+      install_requires=['ipyparallel'])
