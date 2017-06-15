@@ -91,7 +91,8 @@ def slurm_map(fnc, iterables, resource_spec,
         dev_env=env,
         profile=PROFILE_NAME,
         controller_hostname=socket.gethostname(),
-        cluster_id=cluster_id
+        cluster_id=cluster_id,
+        comment=job_name
     )
     # wrap command to execute in bash
     engine_command = "exec bash -c '{}'".format(engine_command)
@@ -136,7 +137,7 @@ def slurm_map(fnc, iterables, resource_spec,
     print("Shutting down cluster")
     client.shutdown(hub=True)
     print("Relinquishing slurm nodes")
-    shutdown_cmd =  'scancel --jobname={job_name}'.format(job_name=job_name)
+    shutdown_cmd =  'scancel -n={job_name}'.format(job_name=job_name)
     shutdown_cmd = "exec bash -c '{}'".format(shutdown_cmd)
     # runs in the background if executed this way
     subprocess.Popen(shutdown_cmd, shell=True)
