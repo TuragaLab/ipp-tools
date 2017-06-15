@@ -3,7 +3,7 @@ Collection of IPyParallel tools and helper scripts
 
 ## Installation
 
-`pip install ~/.../ipp-tools`
+`pip install path/to/ipp-tools`
 
 ### Requirements
 
