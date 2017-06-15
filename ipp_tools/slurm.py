@@ -6,7 +6,11 @@ import socket
 import time
 import os
 
-from ipp_tools.utils import find_free_profile, package_path
+from ipyparallel import Client
+from warnings import warn
+
+from ipp_tools.utils import profile_installed, install_profile, package_path
+
 
 PROFILE_NAME = 'profile_slurm'
 # need a package path util
@@ -23,7 +27,9 @@ PROFILE_NAME = 'profile_slurm'
 # once engines are ready submit jobs to load balancer
 # once jobs are finished take down cluster
 
-def slurm_map(fnc, iterables, resource_spec, env='root', job_name=None, output_path=None):
+def slurm_map(fnc, iterables, resource_spec,
+              env='root', job_name=None, output_path=None,
+              n_retries=5, patience=30):
     """
 
     Args:
@@ -34,20 +40,25 @@ def slurm_map(fnc, iterables, resource_spec, env='root', job_name=None, output_p
       job_name: name of job to use. Derived from fnc name if not specified
       output_path: location to direct output to.
         If unspecified output is sent to a file (based on job name and timestamp) in ~/logs/slurm
+      n_retries: number of times to retry connecting to client if less than the requested number
+        of workers are available.
+      patience: seconds to wait after failed attempt to connect to client
 
     """
     resource_spec = process_resource_spec(resource_spec)
 
-    # find an unused profile or create one if none exist
-    free_profile = find_free_profile(PROFILE_NAME)
-    print('Using profile: {}'.format(free_profile))
+    if not profile_installed(PROFILE_NAME):
+        print("No profile found for {}, installing".format(PROFILE_NAME))
+        install_profile(PROFILE_NAME)
 
     submission_time = time.strftime("%Y%m%d-%H%M%S")
+    cluster_id = '{}_{}'.format(fnc.__name__, submission_time)
+    print("Using cluster id: {}".format(cluster_id))
 
     controller_cmd_template = ('source activate {env};'
-                               ' ipcontroller --profile={profile} --sqlitedb --location={hostname} --ip="*"')
+                               ' ipcontroller --profile={profile} --sqlitedb --location={hostname} --ip="*" --cluster-id={cluster_id}')
     controller_cmd = controller_cmd_template.format(
-        env=env, profile=free_profile, location=socket.gethostname()
+        env=env, profile=PROFILE_NAME, location=socket.gethostname(), cluster_id=cluster_id
     )
 
     print("Starting controller with: {} \n".format(controller_cmd))
@@ -81,38 +92,69 @@ def slurm_map(fnc, iterables, resource_spec, env='root', job_name=None, output_p
     engine_command = engine_command_template.format(
         job_name=job_name,
         output_path=output_path,
-        n_tasks=resource_spec['n_workers'],
+        n_tasks=resource_spec['max_workers'],
         mem_mb=resource_spec['worker_mem_mb'],
         n_cpus=resource_spec['worker_n_cpus'],
         n_gpus=resource_spec['worker_n_gpus'],
         dev_env=env,
-        profile=free_profile,
-        controller_hostname=socket.gethostname()
+        profile=PROFILE_NAME,
+        controller_hostname=socket.gethostname(),
+        cluster_id=cluster_id
     )
 
     print("Starting engines")
     # runs in the background if executed this way
     subprocess.Popen(engine_command, shell=True)
+    print("Sleeping for {}".format(patience))
+    time.sleep(patience)
 
-    print("Sleeping for 30")
-    time.sleep(30)
+    # TODO: shut down unused engines
+    for attempt_idx in range(n_retries):
+        print("Attempt {} to connect to cluster".format(attempt_idx))
+        try:
+            client = Client(profile=PROFILE_NAME, cluster_id=cluster_id)
+            if resource_spec['min_workers'] <= len(client.ids) <= resource_spec['max_workers']:
+                print('Succesfully connected to cluster with {} engines out of {} requested'.format(
+                    len(client.ids), resource_spec['max_workers']))
 
-
-    # TODO: finish
-    # try to connect to cluster
-    # check number of workers
-    # if less than allocated, close client, sleep, and try again
+                if len(client.ids) < resource_spec['max_workers']:
+                    warn("{} slurm jobs submitted but only {} are being used.".format(
+                        resource_spec['max_workers'], len(client.ids)))
+                break
+            else:
+                print("{} available engines less than minimum requested of {}".format(
+                    len(client.ids), resource_spec['min_workers']))
+                print("Retrying after {}".format(patience))
+                client.close()
+                time.sleep(patience)
+        except OSError as os_err:
+            print("Caught OSError while attempting to connect to {}: {}.".format(PROFILE_NAME, os_err))
+        except TimeoutError as timeout_err:
+            print("Caught TimeoutError while attempting to connect to {}: {}".format(PROFILE_NAME, timeout_err))
 
     # run tasks
+    print("Submitting tasks")
+    start_time = time.time()
+    lb_view = client.load_balanced_view()
+    result = lb_view.map(fnc, iterables)
+    print("Tasks finished after {} seconds".format(time() - start_time))
 
-    # once finished, shutdown cluster
+    print("Shutting down cluster")
+    client.shutdown(hub=True)
+    print("Relinquishing slurm nodes")
+    shutdown_cmd =  'scancel --jobname={job_name}'.format(job_name=job_name)
+    # runs in the background if executed this way
+    subprocess.Popen(shutdown_cmd, shell=True)
+
+    return result
 
 
 def process_resource_spec(resource_spec):
     """ Process resource spec, filling in missing fields with default values
     """
     default_spec = {
-        'n_workers': 1,
+        'max_workers': 1,
+        'min_workers': 1,
         'worker_n_cpus': 4,
         'worker_n_gpus': 0,
         'worker_mem_mb': 32000
