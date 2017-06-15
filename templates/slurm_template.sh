@@ -2,7 +2,6 @@
 #
 #SBATCH --job-name={job_name}
 #SBATCH --output={output_path}
-#
 #SBATCH --ntasks={n_tasks}
 #SBATCH --time=0
 #SBATCH --mem-per-cpu={mem_mb}
