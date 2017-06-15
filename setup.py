@@ -4,7 +4,7 @@
 from distutils.core import setup
 
 setup(name='ipp-tools',
-      version='0.01',
+      version='0.2',
       description='IPyParallel utilities',
       author='Andrew Berger',
       author_email='bergera@janelia.hhmi.org',
