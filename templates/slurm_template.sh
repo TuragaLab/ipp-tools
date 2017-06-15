@@ -9,4 +9,5 @@
 #SBATCH --cpus-per-task={n_cpus}
 #SBATCH --gres=gpu:{n_gpus}
 
-srun source activate {dev_env}; ipengine --profile={profile} --location={controller_hostname} --cluster-id={cluster_id}&
+source activate {dev_env}
+srun ipengine --profile={profile} --location={controller_hostname} --cluster-id={cluster_id}&
