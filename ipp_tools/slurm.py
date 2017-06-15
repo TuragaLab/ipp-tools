@@ -42,8 +42,13 @@ def slurm_map(fnc, iterables, resource_spec,
     cluster_id = '{}_{}'.format(fnc.__name__, submission_time)
     print("Using cluster id: {}".format(cluster_id))
 
-    controller_cmd_template = ('source activate {env};'
-                               ' ipcontroller --profile={profile} --sqlitedb --location={hostname} --ip="*" --cluster-id={cluster_id}')
+    # break down by line:
+    # run in bash
+    # activate the specified environment
+    # launch controller with desired settings
+    controller_cmd_template = ("exec bash -c '"
+                               "source activate {env};"
+                               " ipcontroller --profile={profile} --sqlitedb --location={hostname} --ip=\'*\' --cluster-id={cluster_id}'")
     controller_cmd = controller_cmd_template.format(
         env=env, profile=PROFILE_NAME, hostname=socket.gethostname(), cluster_id=cluster_id
     )
@@ -88,6 +93,8 @@ def slurm_map(fnc, iterables, resource_spec,
         controller_hostname=socket.gethostname(),
         cluster_id=cluster_id
     )
+    # wrap command to execute in bash
+    engine_command = "exec bash -c '{}'".format(engine_command)
 
     print("Starting engines")
     # runs in the background if executed this way
@@ -123,13 +130,14 @@ def slurm_map(fnc, iterables, resource_spec,
     print("Submitting tasks")
     start_time = time.time()
     lb_view = client.load_balanced_view()
-    result = lb_view.map(fnc, iterables)
+    result = lb_view.map(fnc, iterables, block=True)
     print("Tasks finished after {} seconds".format(time.time() - start_time))
 
     print("Shutting down cluster")
     client.shutdown(hub=True)
     print("Relinquishing slurm nodes")
     shutdown_cmd =  'scancel --jobname={job_name}'.format(job_name=job_name)
+    shutdown_cmd = "exec bash -c '{}'".format(shutdown_cmd)
     # runs in the background if executed this way
     subprocess.Popen(shutdown_cmd, shell=True)
 
