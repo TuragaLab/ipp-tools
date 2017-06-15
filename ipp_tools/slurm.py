@@ -94,12 +94,17 @@ def slurm_map(fnc, iterables, resource_spec,
         cluster_id=cluster_id,
         comment=job_name
     )
+
+    sbatch_file_path = '/tmp/slurm_map_sbatch_{}.sh'.format(cluster_id)
+    with open(sbatch_file_path, 'r') as sbatch_file:
+        sbatch_file.write(engine_command)
+
     # wrap command to execute in bash
-    engine_command = "exec bash -c 'sbatch --wrap='{}''".format(engine_command)
+    sbatch_command = "exec bash -c 'sbatch {}".format(sbatch_file_path)
 
     print("Starting engines")
     # runs in the background if executed this way
-    subprocess.Popen(engine_command, shell=True)
+    subprocess.Popen(sbatch_command, shell=True)
     print("Sleeping for {}".format(patience))
     time.sleep(patience)
 
@@ -151,6 +156,9 @@ def slurm_map(fnc, iterables, resource_spec,
     shutdown_cmd = "exec bash -c '{}'".format(shutdown_cmd)
     # runs in the background if executed this way
     subprocess.Popen(shutdown_cmd, shell=True)
+
+    print("Removing sbatch script")
+    os.remove(sbatch_file_path)
 
     return result
 
