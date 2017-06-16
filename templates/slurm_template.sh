@@ -3,7 +3,7 @@
 #SBATCH --output={output_path}
 #SBATCH --ntasks={n_tasks}
 #SBATCH --time=0
-#SBATCH --mem-per-cpu={mem_mb}
+#SBATCH --mem={mem_mb}
 #SBATCH --cpus-per-task={n_cpus}
 #SBATCH --gres=gpu:{n_gpus}
 #SBATCH --comment="{comment}"
