@@ -9,4 +9,4 @@
 #SBATCH --gres=gpu:{n_gpus}
 #SBATCH --comment="{comment}"
 
-srun ~/anacond3/envs/{dev_env}/bin/ipengine --profile={profile} --location={controller_hostname} --cluster-id={cluster_id}
+srun ~/anaconda3/envs/{dev_env}/bin/ipengine --profile={profile} --location={controller_hostname} --cluster-id={cluster_id}
