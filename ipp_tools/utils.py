@@ -107,7 +107,7 @@ def install_profile(template_profile):
       full_profile: the full name of the installed profile
     """
     # copy files from ipp-tools/profile/{template} to ~/.ipython
-    template_path = '{}/{}'.format(package_path(), template_profile)
+    template_path = '{}/profiles/{}'.format(package_path(), template_profile)
     dst_path = os.path.expanduser('~/.ipython/{}').format(template_profile)
     assert os.path.exists(template_path)
 
