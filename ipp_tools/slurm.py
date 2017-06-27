@@ -145,6 +145,7 @@ def slurm_map(fnc, iterables, resource_spec,
     # run tasks
     print("Submitting tasks")
     start_time = time.time()
+    client[:].use_cloudpickle()
     lb_view = client.load_balanced_view()
     result = lb_view.map(fnc, iterables, block=True)
     print("Tasks finished after {} seconds".format(time.time() - start_time))
