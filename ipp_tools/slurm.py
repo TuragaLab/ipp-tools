@@ -81,6 +81,13 @@ def slurm_map(fnc, iterables, resource_spec,
         assert isinstance(output_path, str)
         assert os.path.exists(output_path)
 
+    # find path to engine based on specified environment
+    if env == 'root':
+        engine_path = 'bin/ipengine'
+    else:
+        engine_path = 'envs/{}/bin/ipengine'.format(env)
+
+
     engine_command = engine_command_template.format(
         job_name=job_name,
         output_path=output_path,
@@ -88,7 +95,7 @@ def slurm_map(fnc, iterables, resource_spec,
         mem_mb=resource_spec['worker_mem_mb'],
         n_cpus=resource_spec['worker_n_cpus'],
         n_gpus=resource_spec['worker_n_gpus'],
-        dev_env=env,
+        engine_path=engine_path,
         profile=PROFILE_NAME,
         controller_hostname=socket.gethostname(),
         cluster_id=cluster_id,
