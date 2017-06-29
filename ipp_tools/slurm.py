@@ -87,7 +87,8 @@ def slurm_map(fnc, iterables, resource_spec,
     else:
         engine_path = 'envs/{}/bin/ipengine'.format(env)
 
-    assert os.path.exists(engine_path)
+    full_engine_path = os.path.expanduser('~/anaconda3/{}')
+    assert os.path.exists(full_engine_path)
 
 
 
