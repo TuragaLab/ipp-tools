@@ -87,6 +87,9 @@ def slurm_map(fnc, iterables, resource_spec,
     else:
         engine_path = 'envs/{}/bin/ipengine'.format(env)
 
+    assert os.path.exists(engine_path)
+
+
 
     engine_command = engine_command_template.format(
         job_name=job_name,
